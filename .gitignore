@@ -1,3 +1,4 @@
-./Dataset
-./Functions/__pycache__
+/Dataset/creditcard.csv
+/Functions/__pycache__
 .ipynb_checkpoints
+/Functions/Generative_models/__pycache__

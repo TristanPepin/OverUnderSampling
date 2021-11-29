@@ -1,0 +1,6 @@
+numpy
+pandas
+torch
+imblearn
+table-evaluator
+ctgan
