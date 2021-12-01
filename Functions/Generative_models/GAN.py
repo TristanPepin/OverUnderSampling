@@ -14,6 +14,10 @@ from table_evaluator import TableEvaluator
 import numpy as np
 import torch
 
+from tensorflow import keras
+from tensorflow.keras.layers import Input, Dense, Reshape, Flatten, Dropout, BatchNormalization
+
+
 class CTGAN():
     
     def __init__(self, 
@@ -141,3 +145,69 @@ class CTGAN():
         return np.concatenate((X.values,fake)), np.concatenate((y.values,generated_y))
         
         
+class GAN(keras.Model):
+
+    def __init__(self,
+                 discriminator_structure = (128,256,128),
+                 generator_structure = (128,256,128),
+                 discriminator_optimizer = 'Adam',
+                 generator_optimizer = 'Adam',
+                 latent_dim = 64,
+                 activation_discriminator = 'relu',
+                 activation_generator = 'relu',
+                 loss_discriminator = 'mse',
+                 loss_generator = 'mse',
+                 use_batch_norm_generator = True,
+                 use_batch_norm_discriminator = True) -> None:
+
+        super(GAN,self).__init__()
+        self.discriminator_structure = discriminator_structure
+        self.generator_structure = generator_structure
+        self.latent_dim = latent_dim
+        self.activation_dicriminator = activation_discriminator
+        self.activation_generator = activation_generator
+        self.loss_discriminator = loss_discriminator
+        self.loss_generator = loss_generator
+
+        self.generator_optimizer = generator_optimizer
+        self.discriminator_optimizer = discriminator_optimizer
+
+        self.use_batch_norm_generator = use_batch_norm_generator
+        self.use_batch_norm_discriminator = use_batch_norm_discriminator
+
+        self.n_layers_discriminator = len(discriminator_structure)
+        self.n_layers_generator = len(generator_structure)
+
+        self.generator = self.create_generator()
+        self.discriminator = self.create_discriminator()
+
+    def create_generator(self):
+
+        generator = keras.models.Sequential()
+        for layer in range(self.n_layers_generator):
+            generator.add(Dense(self.generator_structure[layer],
+                                activation = self.activation_generator))
+            if self.use_batch_norm_generator and layer < self.n_layers_generator - 1:
+                generator.add(BatchNormalization())
+
+        return generator
+
+
+    def create_discriminator(self):
+
+        discriminator = keras.models.Sequential()
+        for layer in range(self.n_layers_discriminator):
+            discriminator.add(Dense(self.discriminator_structure[layer],
+                                activation = self.activation_discriminator))
+            if self.use_batch_norm_discriminator and layer < self.n_layers_discriminator - 1:
+                discriminator.add(BatchNormalization())
+
+        return discriminator
+
+    def compile(self):
+        self.discriminator.compile(optimizer = self.discriminator_optimizer,
+                                   loss = self.loss_discriminator)
+        self.generator.compile(optimizer = self.generator_optimizer,
+                                   loss = self.loss_generator)
+
+
